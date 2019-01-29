@@ -1,0 +1,265 @@
+---
+title: "DATA607 WK1 Homework: Mushrooms Dataset"
+author: "Javern Wilson"
+date: "January 28, 2019"
+output: 
+  html_document:
+    code_folding: hide
+    toc_float: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## Original Mushroom Dataset
+
+At first glance it may be difficult to understand what the database is trying to convey.
+
+```{r Original, echo=TRUE}
+
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+
+originalMdf <- read.csv(url, header = F, sep = ",", stringsAsFactors = F)
+head(originalMdf, 10)
+
+```
+
+## List of Attributes 
+For reference
+
+1. Class
+2. Cap Shape                          => **C_shape**
+3. Cap Surface                        => **C_surface**
+4. Cap Color                          => **C_color**
+5. Bruises
+6. Oder
+7. Gill Attachment                    => **G_Attachment**
+8. Gill Spacing                       => **G_spacing**
+9. Gill Size                          => **G_Size**
+10. Gill Color                        => **G_color**
+11. Stalk Shape                       => **S_shape**
+12. Stalk Root                        => **S_root**
+13. Stalk Surface Above Ring          => **S_surfaceAR**
+14. Stalk Surface Below Ring          => **S_surfaceBR**
+15. Stalk Color Above Ring            => **S_colorAR**
+16. Stalk Color Below Ring            => **S_colorBR**
+17. Veil Type                         => **V_type**
+18. Veil Color                        => **V_color**
+19. Ring Number                       => **R_number**
+20. Ring Type                         => **R_type**
+21. Spore Print Color                 => **SporeCol**
+22. Population
+23. Habitat
+
+
+## Modified Mushroom Dataset
+
+A more detailed display of attributes that categorizes the different types of Mushrooms.
+
+```{r modified, echo=TRUE}
+
+Mdf <- originalMdf
+
+#Renaming the column names for readability
+colnames(Mdf) <- c("Class", "C_shape", "C_surface", "C_color", "Bruises", "Odor", "G_Attachment", "G_spacing", "G_size", "G_color", "S_shape", "S_root", "S_surfaceAR", "S_surfaceBR", "S_colorAR", "S_colorBR", "V_type", "V_color", "R_number", "R_type", "SporeCol", "Population", "Habitat")
+
+#Renaming values in the column for readability
+Mdf$Class[Mdf$Class == 'p'] <- "Poisonous"
+Mdf$Class[Mdf$Class == 'e'] <- "Edible"
+
+Mdf$C_shape[Mdf$C_shape == 'b'] <- "Bell"
+Mdf$C_shape[Mdf$C_shape == 'c'] <- "Conical"
+Mdf$C_shape[Mdf$C_shape == 'x'] <- "Convex"
+Mdf$C_shape[Mdf$C_shape == 'f'] <- "Flat"
+Mdf$C_shape[Mdf$C_shape == 'k'] <- "Knobbed"
+Mdf$C_shape[Mdf$C_shape == 's'] <- "Sunken"
+
+Mdf$C_surface[Mdf$C_surface == 'f'] <- "Fibrous"
+Mdf$C_surface[Mdf$C_surface == 'g'] <- "Grooves"
+Mdf$C_surface[Mdf$C_surface == 'y'] <- "Scaly"
+Mdf$C_surface[Mdf$C_surface == 's'] <- "Smooth"
+
+Mdf$C_color[Mdf$C_color == 'n'] <- "Brown"
+Mdf$C_color[Mdf$C_color == 'b'] <- "Buff"
+Mdf$C_color[Mdf$C_color == 'c'] <- "Cinnamon"
+Mdf$C_color[Mdf$C_color == 'g'] <- "Gray"
+Mdf$C_color[Mdf$C_color == 'r'] <- "Green"
+Mdf$C_color[Mdf$C_color == 'p'] <- "Pink"
+Mdf$C_color[Mdf$C_color == 'u'] <- "Purple"
+Mdf$C_color[Mdf$C_color == 'e'] <- "Red"
+Mdf$C_color[Mdf$C_color == 'w'] <- "White"
+Mdf$C_color[Mdf$C_color == 'y'] <- "Yellow"
+
+Mdf$Bruises[Mdf$Bruises == 't'] <- "Yes"
+Mdf$Bruises[Mdf$Bruises == 'f'] <- "No"
+
+Mdf$Odor[Mdf$Odor == 'a'] <- "Almond"
+Mdf$Odor[Mdf$Odor == 'l'] <- "Anise"
+Mdf$Odor[Mdf$Odor == 'c'] <- "Creosote"
+Mdf$Odor[Mdf$Odor == 'y'] <- "Fishy"
+Mdf$Odor[Mdf$Odor == 'f'] <- "Foul"
+Mdf$Odor[Mdf$Odor == 'm'] <- "Musty"
+Mdf$Odor[Mdf$Odor == 'n'] <- "None"
+Mdf$Odor[Mdf$Odor == 'p'] <- "Pungent"
+Mdf$Odor[Mdf$Odor == 's'] <- "Spicy"
+
+Mdf$G_Attachment[Mdf$G_Attachment == 'a'] <- "Attached"
+Mdf$G_Attachment[Mdf$G_Attachment == 'd'] <- "Descending"
+Mdf$G_Attachment[Mdf$G_Attachment == 'f'] <- "Free"
+Mdf$G_Attachment[Mdf$G_Attachment == 'n'] <- "Notched"
+
+Mdf$G_spacing[Mdf$G_spacing == 'c'] <- "Closed"
+Mdf$G_spacing[Mdf$G_spacing == 'w'] <- "Crowded"
+Mdf$G_spacing[Mdf$G_spacing == 'd'] <- "Distant"
+
+Mdf$G_size[Mdf$G_size == 'b'] <- "Broad"
+Mdf$G_size[Mdf$G_size == 'n'] <- "Narrow"
+
+Mdf$G_color[Mdf$G_color == 'k'] <- "Black"
+Mdf$G_color[Mdf$G_color == 'n'] <- "Brown"
+Mdf$G_color[Mdf$G_color == 'b'] <- "Buff"
+Mdf$G_color[Mdf$G_color == 'h'] <- "Chocolate"
+Mdf$G_color[Mdf$G_color == 'g'] <- "Gray"
+Mdf$G_color[Mdf$G_color == 'r'] <- "Green"
+Mdf$G_color[Mdf$G_color == 'o'] <- "Orange"
+Mdf$G_color[Mdf$G_color == 'p'] <- "Pink"
+Mdf$G_color[Mdf$G_color == 'u'] <- "Purple"
+Mdf$G_color[Mdf$G_color == 'e'] <- "Red"
+Mdf$G_color[Mdf$G_color == 'w'] <- "White"
+Mdf$G_color[Mdf$G_color == 'y'] <- "Yellow"
+
+Mdf$S_shape[Mdf$S_shape == 'e'] <- "Enlarging"
+Mdf$S_shape[Mdf$S_shape == 't'] <- "Tapering"
+
+Mdf$S_root[Mdf$S_root == 'b'] <- "Bulbous"
+Mdf$S_root[Mdf$S_root == 'c'] <- "Club"
+Mdf$S_root[Mdf$S_root == 'u'] <- "Cup"
+Mdf$S_root[Mdf$S_root == 'e'] <- "Equal"
+
+Mdf$S_surfaceAR[Mdf$S_surfaceAR == 'f'] <- "Fibrous"
+Mdf$S_surfaceAR[Mdf$S_surfaceAR == 'y'] <- "Scaly"
+Mdf$S_surfaceAR[Mdf$S_surfaceAR == 'k'] <- "Silky"
+Mdf$S_surfaceAR[Mdf$S_surfaceAR == 's'] <- "Smooth"
+
+Mdf$S_surfaceBR[Mdf$S_surfaceBR == 'f'] <- "Fibrous"
+Mdf$S_surfaceBR[Mdf$S_surfaceBR == 'y'] <- "Scaly"
+Mdf$S_surfaceBR[Mdf$S_surfaceBR == 'k'] <- "Silky"
+Mdf$S_surfaceBR[Mdf$S_surfaceBR == 's'] <- "Smooth"
+ 
+Mdf$S_colorAR[Mdf$S_colorAR == 'n'] <- "Brown"
+Mdf$S_colorAR[Mdf$S_colorAR == 'b'] <- "Brown"
+Mdf$S_colorAR[Mdf$S_colorAR == 'c'] <- "Brown"
+Mdf$S_colorAR[Mdf$S_colorAR == 'g'] <- "Gray"
+Mdf$S_colorAR[Mdf$S_colorAR == 'o'] <- "Orange"
+Mdf$S_colorAR[Mdf$S_colorAR == 'p'] <- "Pink"
+Mdf$S_colorAR[Mdf$S_colorAR == 'e'] <- "Red"
+Mdf$S_colorAR[Mdf$S_colorAR == 'w'] <- "White"
+Mdf$S_colorAR[Mdf$S_colorAR == 'y'] <- "Yellow"
+
+Mdf$S_colorBR[Mdf$S_colorBR == 'n'] <- "Brown"
+Mdf$S_colorBR[Mdf$S_colorBR == 'b'] <- "Brown"
+Mdf$S_colorBR[Mdf$S_colorBR == 'c'] <- "Brown"
+Mdf$S_colorBR[Mdf$S_colorBR == 'g'] <- "Gray"
+Mdf$S_colorBR[Mdf$S_colorBR == 'o'] <- "Orange"
+Mdf$S_colorBR[Mdf$S_colorBR == 'p'] <- "Pink"
+Mdf$S_colorBR[Mdf$S_colorBR == 'e'] <- "Red"
+Mdf$S_colorBR[Mdf$S_colorBR == 'w'] <- "White"
+Mdf$S_colorBR[Mdf$S_colorBR == 'y'] <- "Yellow"
+
+Mdf$V_type[Mdf$V_type == 'p'] <- "Partial"
+Mdf$V_type[Mdf$V_type == 'u'] <- "Universal"
+
+Mdf$V_color[Mdf$V_color == 'n'] <- "Brown"
+Mdf$V_color[Mdf$V_color == 'o'] <- "Orange"
+Mdf$V_color[Mdf$V_color == 'w'] <- "White"
+Mdf$V_color[Mdf$V_color == 'y'] <- "Yellow"
+
+Mdf$R_number[Mdf$R_number == 'n'] <- "None"
+Mdf$R_number[Mdf$R_number == 'o'] <- "One"
+Mdf$R_number[Mdf$R_number == 't'] <- "Two"
+
+Mdf$R_type[Mdf$R_type == 'c'] <- "Cobwebby"
+Mdf$R_type[Mdf$R_type == 'e'] <- "Evanescent"
+Mdf$R_type[Mdf$R_type == 'f'] <- "Flaring"
+Mdf$R_type[Mdf$R_type == 'l'] <- "Large"
+Mdf$R_type[Mdf$R_type == 'n'] <- "None"
+Mdf$R_type[Mdf$R_type == 'p'] <- "Pendant"
+Mdf$R_type[Mdf$R_type == 's'] <- "Sheathing"
+Mdf$R_type[Mdf$R_type == 'z'] <- "Zone"
+
+Mdf$SporeCol[Mdf$SporeCol == 'k'] <- "Black" 
+Mdf$SporeCol[Mdf$SporeCol == 'n'] <- "Brown"
+Mdf$SporeCol[Mdf$SporeCol == 'b'] <- "Buff"
+Mdf$SporeCol[Mdf$SporeCol == 'h'] <- "Chocolate"
+Mdf$SporeCol[Mdf$SporeCol == 'r'] <- "Green"
+Mdf$SporeCol[Mdf$SporeCol == 'o'] <- "Orange"
+Mdf$SporeCol[Mdf$SporeCol == 'u'] <- "Purple"
+Mdf$SporeCol[Mdf$SporeCol == 'w'] <- "White"
+Mdf$SporeCol[Mdf$SporeCol == 'y'] <- "Yellow"
+
+Mdf$Population[Mdf$Population == 'a'] <- "Abundant"
+Mdf$Population[Mdf$Population == 'c'] <- "Clustered"
+Mdf$Population[Mdf$Population == 'n'] <- "Numerous"
+Mdf$Population[Mdf$Population == 's'] <- "Scattered"
+Mdf$Population[Mdf$Population == 'v'] <- "Several"
+Mdf$Population[Mdf$Population == 'y'] <- "Solitary"
+
+Mdf$Habitat[Mdf$Habitat == 'g'] <- "Grasses"
+Mdf$Habitat[Mdf$Habitat == 'l'] <- "Leaves"
+Mdf$Habitat[Mdf$Habitat == 'm'] <- "Meadows"
+Mdf$Habitat[Mdf$Habitat == 'p'] <- "Paths"
+Mdf$Habitat[Mdf$Habitat == 'u'] <- "Urban"
+Mdf$Habitat[Mdf$Habitat == 'w'] <- "Waste"
+Mdf$Habitat[Mdf$Habitat == 'd'] <- "Woods"
+
+head(Mdf)
+
+```
+
+## Subset
+
+Displays a table of the characterics of Mushrooms that mycologists mostly observe 
+```{r Exploration, echo=TRUE, message=FALSE, warning=FALSE}
+
+library(plyr)
+library(dplyr)
+M2df <- select(Mdf, Class, C_shape, C_surface, C_color, Habitat)
+
+head(M2df, 25)
+
+#Totals for values in each column 
+summary(factor(M2df$Class))
+summary(factor(M2df$C_shape))
+summary(factor(M2df$C_surface))
+summary(factor(M2df$C_color))
+summary(factor(M2df$Habitat))
+
+```
+<br/>
+
+#### Characteristics of Poisonous mushrooms
+```{r poisonous, echo=TRUE, message=FALSE, warning=FALSE}
+#Details of poisonous mushrooms
+poison <- M2df %>% filter(Class == 'Poisonous')
+head(poison, 20)
+table(poison$Habitat)
+
+```
+Most poisonous mushroom a found in the Woods.
+<br/>
+
+
+####Characteristics of Edible mushrooms
+```{r edible, echo=TRUE}
+#Details of edible mushrooms
+
+edible <- M2df %>% filter(Class == 'Edible')
+head(edible, 20)
+table(edible$C_surface)
+```
+Fibrous Mushrooms are mostly edible.
+
+### 
