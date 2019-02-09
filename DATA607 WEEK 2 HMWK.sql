@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS Movies;
 
 
 CREATE TABLE Movies (
-	m_ID int NOT NULL AUTO_INCREMENT,
+    m_ID int NOT NULL AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     length int,
     rate char(6) NOT NULL,
