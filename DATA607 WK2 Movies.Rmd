@@ -1,0 +1,117 @@
+---
+title: "DATA607 WK2 Homework: Movies"
+author: "Javern Wilson"
+date: "February 7, 2019"
+output: html_document
+
+---
+
+### Connecting to SQL database
+
+```{r connect, echo=TRUE, message=FALSE, warning=FALSE}
+
+library(DBI)
+library(RMySQL)
+library(RSQLite)
+
+
+db_user <- 'data607user'
+db_password <- 'pass'
+db_name <- 'Movies'
+db_host <- '35.226.130.145' # for access to SQL Database hosted on Google Cloud
+db_port <- 3306
+
+drv <- dbDriver("MySQL")
+
+# creating tbdb connection object with RMysql package
+connect <- dbConnect(drv, user = db_user, password = db_password, dbname = db_name, host = db_host, port = db_port)
+
+```
+
+### Loading tables from SQL into R dataframes
+```{r loading}
+
+Movies <- dbGetQuery(connect, "SELECT * FROM Movies" )
+Reviewers <- dbGetQuery(connect, "SELECT * FROM Reviewers" )
+ReviewsList <- dbGetQuery(connect, "SELECT * FROM Scores" ) 
+
+```
+
+### Tables loaded with raw data collected
+```{r tables}
+#List of movies chosen for this assignment
+Movies
+
+#People selected in this study
+Reviewers
+
+#ID numbers of movies and reviews along with scores
+head (ReviewsList)
+
+```
+
+### Putting all data into one table.
+Use of SQL statements via R to change the name of some colomns. R statements were used for the others
+
+```{r refined review list}
+#Replaces each movie id and reviewer id with the corresponding names
+RefinedRL <- dbGetQuery(connect, "SELECT Movies.name AS Title, Movies.length_mins, Movies.rate, Reviewers.name AS Participants, Reviewers.age, Reviewers.gender,              Scores.score AS score FROM Movies INNER JOIN Scores ON Movies.m_ID = Scores.m_ID
+INNER JOIN Reviewers on Scores.r_ID = Reviewers.r_ID"  )
+
+colnames(RefinedRL)[colnames(RefinedRL) == 'length_mins'] <- 'Length'
+colnames(RefinedRL)[colnames(RefinedRL) == 'rate'] <- 'Rate'
+colnames(RefinedRL)[colnames(RefinedRL) == 'age'] <- 'Age'
+colnames(RefinedRL)[colnames(RefinedRL) == 'gender'] <- 'Gender'
+colnames(RefinedRL)[colnames(RefinedRL) == 'score'] <- 'Score'
+RefinedRL$Score[is.na(RefinedRL$Score)] = 0 #change missing values to 0
+head(RefinedRL, 20)
+
+```
+
+### Summary of each column
+```{r summary}
+
+summary(RefinedRL)
+
+```
+
+
+
+### Ratings: Average Score per Person and Counts of each score (graph)
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+
+avgsc <- aggregate(Score ~ Participants + Age, RefinedRL, mean)
+
+avgsc
+```
+
+
+```{r hist}
+hist(RefinedRL$Score, main = "Ratings Collected", xlab = "Rating Scores", ylab = "Count")
+
+```
+
+This histogram is bimodal with peaks at rating for 0 and 4 - 5. Persons rated a movie 0 because they have not seen it or not of age.
+
+```{r}
+
+Malachi <- sum(RefinedRL$Participants == 'Malachi' & RefinedRL$Score > 0)
+Zo <- sum(RefinedRL$Participants == 'Zo' & RefinedRL$Score > 0)
+Dowren <- sum(RefinedRL$Participants == 'Dowren' & RefinedRL$Score > 0)
+Adrian <- sum(RefinedRL$Participants == 'Adrian' & RefinedRL$Score > 0)
+Wendy <- sum(RefinedRL$Participants == 'Wendy' & RefinedRL$Score > 0)
+Camz <- sum(RefinedRL$Participants == 'Camz' & RefinedRL$Score > 0)
+Javern <- sum(RefinedRL$Participants == 'Javern' & RefinedRL$Score > 0)
+Jan <- sum(RefinedRL$Participants == 'Jan' & RefinedRL$Score > 0)
+Soriya <- sum(RefinedRL$Participants == 'Soriya' & RefinedRL$Score > 0)
+Reece <- sum(RefinedRL$Participants == 'Reece' & RefinedRL$Score > 0)
+
+names <- c("M", "Z", "D", "A", "W", "C", "J", "Jan", "S", "R")
+Persons <- c(Malachi, Zo, Dowren, Adrian, Wendy, Camz, Javern, Jan, Soriya, Reece)
+barplot(Persons, names.arg = names, main = "Number of Movies watched from the list by each person", xlab = "Participants", ylab = "Number of Movies")
+
+
+```
+
+Dowren and Adrian watched the least amount of movies. They are the oldest as well. Current movies are not of their interest. Malachi has the second lowest as he is the youngest and is limited to movies rated PG or maybe PG-13. Javern, Camz and Wendy watched all movies. 
