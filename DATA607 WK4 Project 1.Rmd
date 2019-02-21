@@ -1,0 +1,236 @@
+---
+title: "DATA607 Project 1"
+author: "Javern Wilson"
+date: "February 14, 2019"
+output: 
+  html_document:
+        toc: true
+        toc_float: true
+        toc_depth: 2 
+        code_folding: hide
+        theme: journal
+
+---
+
+# This project is about R Character Manipulation and Data Processing. The file used for this purpose is a text file containing information on a Chess Tournmament. There are 64 cases/players and 10 attibutes used to make up the dataset.
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+library(RCurl)
+library(readr)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+```
+
+
+
+## Chess.txt file 
+
+*Download text file [here](https://github.com/javernw/JWCUNYAssignments/blob/master/Chess.txt)*
+
+ ![This is the file that would be used to import into R, clean and extract useful data](C:/Users/Javern/Documents/Data Science MS/DATA607/chess.png)
+
+## Imported Text File
+Here is what the file looks like when it was imported into R. It shows the first 10 cases of the text file. The data can be somewhat difficult to read the first time.
+
+```{r get dataset}
+
+url <- "https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/Chess.txt"
+chess <- read.csv(url, header = F, sep = "|", stringsAsFactors = FALSE)
+
+head(chess, 10) #first 10 rows
+```
+
+
+## Tidy Table
+The table is conformed to a standard where you can understand the data. 
+
+```{r clean up }
+#removing '-'s and '|'s from table and storing it as a data frame
+chessData <- as.data.frame(sapply(chess, gsub, pattern = "[-]{2,}|[|]", replacement = ""))
+#removing rows 1 to 4 and column 11 because of unnecessary data
+chessData <- chessData[-c(1:4), -11] 
+row.names(chessData) <- NULL # remove row number counts
+
+#rename columns
+colnames(chessData) <- c("Pair Num", "Player Name USCF ID / Rtg (Pre->Post)", "Total Num", "Round 1", "Round 2", "Round 3", "Round 4", "Round 5", "Round 6", "Round 7")
+
+n <- nrow(chessData)
+t <-seq(3, n, by = 3) #counts by 3 
+
+#preview of cleaned data
+kable(chessData) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>% 
+  row_spec(t, background = "pink") %>% 
+  scroll_box(width = "100%", height = "700px") 
+
+```
+
+## Top 5 Players and their Opponents
+
+## {.tabset .tabset-fade .tabset-pills}
+
+### 1 Gary HUA
+```{r}
+
+#if the variable is a factor it will be converted to character 
+chessData %>% mutate_if(is.factor, as.character) -> chessData
+
+ghua <- chessData$`Player Name USCF ID / Rtg (Pre->Post)`[chessData$`Round 1` == "L   1"|chessData$`Round 2` == "L   1"|chessData$`Round 3` == "L   1"|chessData$`Round 4` == "L   1"|chessData$`Round 5` == "L   1"|chessData$`Round 6` == "L   1"|chessData$`Round 7` == "L   1" |chessData$`Round 1` == "D   1"|chessData$`Round 2` == "D   1"|chessData$`Round 3` == "D   1"|chessData$`Round 4` == "D   1"|chessData$`Round 5` == "D   1"|chessData$`Round 6` == "D   1"|chessData$`Round 7` == "D   1"|chessData$`Round 1` == "W   1"|chessData$`Round 2` == "W   1"|chessData$`Round 3`== "W   1"|chessData$`Round 4` == "W   1"|chessData$`Round 5` == "W   1"|chessData$`Round 6` == "W   1"|chessData$`Round 7` == "W   1"]
+
+noquote(str_c(c(4, 7, 12, 14, 18, 21,39), ghua)) #attach player numbers
+```
+
+
+### 2 DAKSHESH DARURI
+```{r}
+ddaruri <- chessData$`Player Name USCF ID / Rtg (Pre->Post)`[chessData$`Round 1` == "L   2"|chessData$`Round 2` == "L   2"|chessData$`Round 3` == "L   2"|chessData$`Round 4` == "L   2"|chessData$`Round 5` == "L   2"|chessData$`Round 6` == "L   2"|chessData$`Round 7` == "L   2" |chessData$`Round 1` == "D   2"|chessData$`Round 2` == "D   2"|chessData$`Round 3` == "D   2"|chessData$`Round 4` == "D   2"|chessData$`Round 5` == "D   2"|chessData$`Round 6` == "D   2"|chessData$`Round 7` == "D   2"|chessData$`Round 1` == "W   2"|chessData$`Round 2` == "W   2"|chessData$`Round 3`== "W   2"|chessData$`Round 4` == "W   2"|chessData$`Round 5` == "W   2"|chessData$`Round 6` == "W   2"|chessData$`Round 7` == "W   2"]
+
+noquote(str_c(c(4, 7, 16, 17, 20, 58, 63), ddaruri))
+```
+
+
+### 3 ADITYA BAJAJ
+```{r}
+
+abajaj<- chessData$`Player Name USCF ID / Rtg (Pre->Post)`[chessData$`Round 1` == "L   3"|chessData$`Round 2` == "L   3"|chessData$`Round 3` == "L   3"|chessData$`Round 4` == "L   3"|chessData$`Round 5` == "L   3"|chessData$`Round 6` == "L   3"|chessData$`Round 7` == "L   3" |chessData$`Round 1` == "D   3"|chessData$`Round 2` == "D   3"|chessData$`Round 3` == "D   3"|chessData$`Round 4` == "D   3"|chessData$`Round 5` == "D   3"|chessData$`Round 6` == "D   3"|chessData$`Round 7` == "D   3"|chessData$`Round 1` == "W   3"|chessData$`Round 2` == "W   3"|chessData$`Round 3`== "W   3"|chessData$`Round 4` == "W   3"|chessData$`Round 5` == "W   3"|chessData$`Round 6` == "W   3"|chessData$`Round 7` == "W   1"]
+
+noquote(str_c(c(8, 11, 12, 13, 21, 25, 6), abajaj))
+
+```
+
+
+### 4 PATRICK H SCHILLING
+```{r}
+
+pschilling <- chessData$`Player Name USCF ID / Rtg (Pre->Post)`[chessData$`Round 1` == "L   4"|chessData$`Round 2` == "L   4"|chessData$`Round 3` == "L   4"|chessData$`Round 4` == "L   4"|chessData$`Round 5` == "L   4"|chessData$`Round 6` == "L   4"|chessData$`Round 7` == "L   4" |chessData$`Round 1` == "D   4"|chessData$`Round 2` == "D   4"|chessData$`Round 3` == "D   4"|chessData$`Round 4` == "D   4"|chessData$`Round 5` == "D   4"|chessData$`Round 6` == "D   4"|chessData$`Round 7` == "D   4"|chessData$`Round 1` == "W   4"|chessData$`Round 2` == "W   4"|chessData$`Round 3`== "W   4"|chessData$`Round 4` == "W   4"|chessData$`Round 5` == "W   4"|chessData$`Round 6` == "W   4"|chessData$`Round 7` == "W   4"]
+
+noquote(str_c(c(1 ,2, 5, 19, 23, 26, 28), pschilling))
+
+```
+
+
+### 5 HANSHI ZUO
+```{r}
+
+hzuo <- chessData$`Player Name USCF ID / Rtg (Pre->Post)`[chessData$`Round 1` == "L   5"|chessData$`Round 2` == "L   5"|chessData$`Round 3` == "L   5"|chessData$`Round 4` == "L   5"|chessData$`Round 5` == "L   5"|chessData$`Round 6` == "L   5"|chessData$`Round 7` == "L   5" |chessData$`Round 1` == "D   5"|chessData$`Round 2` == "D   5"|chessData$`Round 3` == "D   5"|chessData$`Round 4` == "D   5"|chessData$`Round 5` == "D   5"|chessData$`Round 6` == "D   5"|chessData$`Round 7` == "D   5"|chessData$`Round 1` == "W   5"|chessData$`Round 2` == "W   5"|chessData$`Round 3`== "W   5"|chessData$`Round 4` == "W   5"|chessData$`Round 5` == "W   5"|chessData$`Round 6` == "W   5"|chessData$`Round 7` == "W   5"]
+
+noquote(str_c(c(4, 12, 13, 14, 17, 37, 45), hzuo))
+
+```
+
+
+## Result: Final Product
+### List of Chess players, their Points, Pre-Ratings and Average ratings of opponents from the tournaments.
+*The data was written to a .csv file. To see the file click this [link](https://github.com/javernw/JWCUNYAssignments/blob/master/ChessTournament.csv)*
+
+```{r averages}
+# Calculating average pre-ratings of each players' opponentsrs
+p1avg <- round(mean(c(1436, 1563, 1600 ,1610 ,1649, 1663, 1716)))
+p2avg <- round(mean(c(1175, 917, 1716, 1629, 1604, 1629, 1649)))
+p3avg <- round(mean(c(1641, 955, 1745, 1563, 1712, 1666, 1663)))
+p4avg <- round(mean(c(1363, 1507, 1553, 1579, 1655, 1564, 1794)))
+p5avg <- round(mean(c(1242, 980, 1663, 1663, 1716, 1610, 1629)))
+p6avg <- round(mean(c(1399, 1602, 1712, 1438, 1365, 1552, 1563)))
+p7avg <- round(mean(c(1092, 377, 1666, 1712, 1794, 1411, 1553)))
+p8avg <- round(mean(c(1384, 1441, 1610, 1411, 1362, 1507, 1564)))
+p9avg <- round(mean(c(1745, 1600, 853, 1641, 1595 ,1649, 1579)))
+p10avg <- round(mean(c(1604, 1564, 1186, 1494, 1686, 1745, 1600)))
+p11avg <- round(mean(c(1423, 1153, 1686, 1673, 1384, 1399,1579)))
+p12avg <- round(mean(c(1332, 1449, 1655, 1423, 1794, 1384)))
+p13avg <- round(mean(c(1355, 1552, 1649, 1655,1449, 1384,1441)))
+p14avg <- round(mean(c(1270, 1199, 1641, 1794, 1552, 1655, 1494)))
+p15avg <- round(mean(c(1564, 1604, 1522, 1555, 1270, 1449, 1423)))
+p16avg <- round(mean(c(1365, 1220, 1436, 1553, 1355)))
+p17avg <- round(mean(c(1382, 1403, 1579, 1553, 1363, 1555,1655)))
+p18avg <- round(mean(c(1362, 1411, 1794, 1441, 1564, 1423, 1365)))
+p19avg <- round(mean(c(1220, 1365, 935, 1507, 1600, 1716, 1641)))
+p20avg <- round(mean(c(1348, 1291, 1363, 1403, 1507, 1553, 1411)))
+p21avg <- round(mean(c(1283, 1794, 1362, 1384, 1348, 1436, 1686)))
+p22avg <- round(mean(c(1163, 935, 1507, 1220, 1629, 1348)))
+p23avg <- round(mean(c(1716, 1283, 1595, 917, 1629, 980, 377)))
+p24avg <- round(mean(c(1507, 1362, 1283, 1745, 967,1436, 1199)))
+p25avg <- round(mean(c(1411, 1393, 1384, 1229, 1399, 1365, 1362)))
+p26avg <- round(mean(c(1291, 1348, 1629, 1716, 1411, 1441, 1712)))
+p27avg <- round(mean(c(1666, 1011, 377, 980, 1610, 1686)))
+p28avg <- round(mean(c(1229, 1716, 1555, 1564, 1595, 1641, 1355)))
+p29avg <- round(mean(c(1056, 1686, 1423, 1399, 935, 1382)))
+p30avg <- round(mean(c(935, 1163, 1220, 1186, 1494, 955, 1056)))
+p31avg <- round(mean(c(917, 1186, 1163, 1365, 1522, 1056, 1610)))
+p32avg <- round(mean(c(955, 1641, 1199, 1600, 1011, 1579, 1666)))
+p33avg <- round(mean(c(967, 1663, 1056, 1355, 1011, 1666, 1220)))
+p34avg <- round(mean(c(1686, 967, 980, 1602, 1745, 1712, 935)))
+p35avg <- round(mean(c(377, 1423, 1153, 1686, 1092, 935, 1382)))
+p36avg <- round(mean(c(1666, 1092, 1011, 1449, 1604, 1507)))
+p37avg <- round(mean(c(1655, 1399, 1552, 1363, 955)))
+p38avg <- round(mean(c(1712, 1438, 1602, 1663, 1600, 1220)))
+p39avg <- round(mean(c(1794, 1270, 1348, 1604, 1199, 1563, 1229)))
+p40avg <- round(mean(c(1595, 1579, 1436, 853, 1563, 1153, 1555)))
+p41avg <- round(mean(c(853, 1629, 917, 1595)))
+p42avg <- round(mean(c(1663, 1056, 1092, 967, 955, 1163, 1153)))
+p43avg <- round(mean(c(1563, 1363, 1229, 1175, 853, 377, 1186)))
+p44avg <- round(mean(c(1610, 1441, 1393, 1436, 1229, 853)))
+p45avg <- round(mean(c(1655, 1011, 967, 1153, 1175, 1186, 917)))
+p46avg <- round(mean(c(1438, 1649, 1552, 1056, 1163, 1283, 1363)))
+p47avg <- round(mean(c(1600, 1229, 1563, 955, 1641, 1011, 1745)))
+p48avg <- round(mean(c(1629,1175, 935, 1602, 1438)))
+p49avg <- round(mean(c(1579, 1595, 1175, 1163, 917)))
+p50avg <- round(mean(c(1602, 1332, 1449, 377, 1494, 1522)))
+p51avg <- round(mean(c(1552, 1242, 1355, 1092, 1441, 1362, 1449)))
+p52avg <- round(mean(c(1522, 1555, 1564, 1382, 1602, 1438, 1399)))
+p53avg <- round(mean(c(1745, 1199, 1092)))
+p54avg <- round(mean(c(1610, 1436, 955, 1220, 853, 1163)))
+p55avg <- round(mean(c(1530, 1494, 1365, 1242, 1283)))
+p56avg <- round(mean(c(1712, 1438, 1242, 1348, 1332)))
+p57avg <- round(mean(c(1649,1355, 1332, 1011,1438, 1393)))
+p58avg <- round(mean(c(1602, 1553, 1403, 1363, 1291, 1242)))
+p59avg <- round(mean(c(1403, 1411, 1348, 1283, 1270, 1199)))
+p60avg <- round(mean(c(1449, 1399, 1242, 1332, 1229)))
+p61avg <- round(mean(c(1441, 1384, 1270, 1362, 1332, 1522, 980)))
+p62avg <- round(mean(c(1186)))
+p63avg <- round(mean(c(1553, 1382, 1291, 1283, 1242)))
+p64avg <- round(mean(c(1555,1522, 1494, 1291, 377, 1332, 1270)))
+
+
+#Average pre-rating for each player
+Avgprerating <- c(p1avg, p2avg, p3avg, p4avg, p5avg, p6avg, p7avg, p8avg, p9avg, p10avg, p11avg, p12avg, p13avg, p14avg, p15avg, p16avg, p17avg, p18avg, p19avg, p20avg, p21avg, p22avg, p23avg, p24avg, p25avg, p26avg, p27avg, p28avg, p29avg, p30avg, p31avg, p32avg, p33avg, p34avg, p35avg, p36avg, p37avg, p38avg, p39avg, p40avg, p41avg, p42avg, p43avg, p44avg, p45avg, p46avg, p47avg, p48avg, p49avg, p50avg, p51avg, p52avg, p53avg, p54avg, p55avg, p56avg, p57avg, p58avg, p59avg, p60avg, p61avg, p62avg, p63avg, p64avg)
+
+
+#extract states
+state <- unlist(str_extract_all(chessData$`Pair Num`, "[A-Z]{2}"))
+
+#extract name of players
+playernames <- unlist(str_extract_all(chessData$`Player Name USCF ID / Rtg (Pre->Post)`, "([A-Z]+ [ A-Z-]*)"))
+
+#extract pre-rating scores
+preRating <- unlist(str_extract_all(chessData$`Player Name USCF ID / Rtg (Pre->Post)`, "(: [0-9]{2,4})|  ([0-9]{3})"))
+preRating <- gsub(": ", "", preRating)
+preRating <- as.numeric(preRating)#convert from character to numeric
+
+pointsnum <- unlist(str_extract_all(chessData$`Total Num`, "\\d\\.\\d"))
+pointsnum <- as.numeric(pointsnum)#convert from character to numeric
+
+
+#table of chess players, their scores and ratings
+Chess <- data.frame(playernames, state, pointsnum, preRating, Avgprerating)
+colnames(Chess) <- c("Player Names", "State", "Total Number of Points", "Pre Ratings", "Opponents Avg Chess Ratings")
+
+#format table
+Chess %>%
+  kable() %>%
+  kable_styling(font_size = 12)
+
+```
+
+
+```{r witecsv, eval=FALSE, include=FALSE}
+#write to csv file. Change file path to suit your directory
+write.csv(Chess, file = "C:/Users/Javern/Documents/Data Science MS/DATA607/ChessTournament.csv")
+
+```
+
+
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
