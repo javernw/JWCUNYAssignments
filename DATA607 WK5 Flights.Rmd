@@ -1,0 +1,113 @@
+---
+title: 'DATA607 WK5 Homework: Tidy Data'
+author: "Javern Wilson"
+date: "February 25, 2019"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+This purpose of this assignment was to mimic the "wide" dataset provided by creating a [.CSV file](https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/flights.csv), reading it into R, clean up the data then perform analysis. 
+
+
+```{r message=FALSE, warning=FALSE}
+library(tidyr)
+library(dplyr)
+library(reshape2)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+```
+
+
+## Untidy Data
+```{r}
+#read file into R
+fileloc = "https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/flights.csv"
+flights_df <- read.csv(fileloc, sep = ",", stringsAsFactors = F)
+flights_df %>%
+  kable() %>%
+  kable_styling()
+```
+
+```{r}
+#rename first 2 columns
+flights_df <- rename(flights_df, "Airline" = `ï..`, "Status" = `X`)
+flights_df%>%
+  kable() %>%
+  kable_styling()
+
+```
+
+## Tidy Data
+
+```{r}
+tidyflights_df <- flights_df %>% 
+  gather("City", "Count", 3:7, na.rm = T) %>% #pushes data in column into rows
+  spread(Status, Count) %>%  
+  rename("Delayed" = `delayed`, "OnTime" = `on time`)  
+
+tidyflights_df %>%
+  kable() %>%
+  kable_styling()
+```
+
+
+## Analysis
+```{r}
+
+tidyflights_df <- tidyflights_df %>% mutate(Ratio = round((`OnTime` / `Delayed`),2), "%Success" = round(`OnTime` / (`Delayed` + `OnTime`), 2))
+tidyflights_df %>%
+  kable() %>%
+  kable_styling()
+
+```
+**Ratio -> Ontime:Delayed**. Let's look at ALASKA Airline in Phoenix. For every `18` flights that is on time, there is `1` that's delayed which is very good. Based on the success rate, Alaska airline has a `95%` record of being on time in Phoenix that is. 
+
+
+```{r}
+# Delays in each city by the two airlines
+tidyflights_df %>% 
+  arrange(City) %>% 
+  select(Airline, City, Delayed) %>% 
+  group_by(Airline) %>% 
+  spread(Airline, Delayed) %>%
+  kable() %>%
+  kable_styling() %>% add_header_above(c(" ", "Delays"=2))
+
+```
+
+```{r}
+# % Delay for Alaska and Amwest 
+tidyflights_df %>% 
+  group_by(Airline) %>% 
+  summarise(DelayRate = sum(`Delayed`) / (sum(`Delayed`) + sum(`OnTime`))) %>%
+  spread(Airline, DelayRate) %>%
+  kable() %>%
+  kable_styling()
+
+```
+**AMWEST has higher count in delays on a whole but lower delay rate.**
+
+```{r}
+alaska <- filter(tidyflights_df, Airline == "ALASKA") #alaska df
+summary(alaska$`%Success`)
+
+amwest <- filter(tidyflights_df, Airline == "AMWEST") #amwest df
+summary(amwest$`%Success`)
+```
+**Summary of success (on time) for each flight. Alaska shows better progress.**
+
+```{r}
+# line graph showing the delay ratios between alaska and amwest
+ggplot(tidyflights_df, aes(x=City, y=Ratio, group = Airline)) + geom_line(aes(color=Airline)) +geom_point(aes(color=Airline))
+
+```
+<br/> Most delays occured in San Francisco with both airlines. A few factors can contribute to this such as weather or aviation system delay at that city's airport.
+
+##Conclusion
+Which Airline is better? 
+
+In the analysis, `ALASKA` has better on time arrival rates with an average of `88%`, while `AMWEST` shows a lower delay rate than `ALASKA`; `11%` and `13%` respectively. `AMWEST` did more flights than `ALASKA` which means more chances of delays but as we know, when the population size increase, there is little difference in the outcome. However, more flights does not mean it's better but can be that it has cheaper flights or more accomodating than the competition. 
+It's hard to tell which flight is better but with other factors remaining constant, `AMWEST` is better just because they have a lower delay rate and this assignment is focused on the analysis of the *arrival delays* between the two flights.
