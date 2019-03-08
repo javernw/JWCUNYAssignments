@@ -36,7 +36,7 @@ This Dataset is wide with 25 variables and 5591 observations. There are 5 differ
 ### Full Data
 ```{r}
 
-nutritiontbl <- read.csv("C:/Users/Javern/Documents/Data Science MS/DATA607/Nutrition__Physical_Activity__and_Obesity_-_Policy_and_Environmental_Data.csv", sep = ",", header = T, stringsAsFactors = F)
+nutritiontbl <- read.csv("https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/Nutrition__Physical_Activity__and_Obesity_-_Policy_and_Environmental_Data.csv", sep = ",", header = T, stringsAsFactors = F)
 nu <- head(nutritiontbl, 20)
 kable(nu) %>% kable_styling(font_size = 9) %>% scroll_box(width = "750px", height = "500px")
 
