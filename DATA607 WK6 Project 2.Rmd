@@ -1,0 +1,319 @@
+---
+title: "DATA607 WK6 Project 2"
+author: "Javern Wilson"
+date: "March 1, 2019"
+output:
+   rmdformats::readthedown:
+    highlight: kate
+ 
+---
+```{r knitr_init, message=FALSE, warning=FALSE, cache=FALSE, include=FALSE}
+library(knitr)
+library(rmdformats); library(rmarkdown)
+library(RCurl); library(readr); library(dplyr); library(tidyr); library(reshape2);library(stringr)
+library(ggmap); library(gganimate); library(maps); library(mapdata); library(lubridate); library(leaflet); library(shiny); library(RColorBrewer); library(rgdal); library(cowplot); library(kableExtra); library(plotly); library(XML)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+*Link to Code:[here](https://github.com/javernw/JWCUNYAssignments/blob/master/DATA607%20WK6%20Project%202.Rmd)*
+
+# Dataset 1: Nutrition {.tabset .tabset-fade}
+
+### Introduction
+
+This Dataset is wide with 25 variables and 5591 observations. There are 5 different (Breastfeeding, Sugary Drinks, Physical Activity, Fruits and Vegetables and Televison watching), 5 topics and 27 different questions. Each question should have their own column based on the class they belong  to since some values are listed as percentages, averages and  "number of". A table is created for each class. Only 2 tables will be focused on in this dataset for this project. For more information, visit [HeathData.gov](https://healthdata.gov/dataset/nutrition-physical-activity-and-obesity-policy-and-environmental-data)
+
+### Full Data
+```{r}
+nutritiontbl <- read.csv("https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/Nutrition__Physical_Activity__and_Obesity_-_Policy_and_Environmental_Data.csv", sep = ",", header = T, stringsAsFactors = F)
+nu <- head(nutritiontbl, 20)
+kable(nu) %>% kable_styling(font_size = 10) %>% scroll_box(width = "750px", height = "500px")
+```
+
+### Subset
+Some of the columns were removed as they are not relevant to the analysis.
+```{r}
+# a new table with less columns
+nutrition_df <- select(nutritiontbl, YearStart, YearEnd, LocationDesc, Class, Topic, Question, Data_Value,  GeoLocation) 
+kable(head(nutrition_df, 30)) %>% kable_styling(bootstrap_options = "striped", font_size = 10) %>% scroll_box(width = "750px", height = "500px")
+```
+
+### Areas Covered
+```{r}
+#List of areas covered in the dataset
+AreasCovered <- distinct(nutritiontbl, Class, Topic, Question)
+kable(AreasCovered) %>% kable_styling(bootstrap_options = c("striped", "hovered", "condensed"),font_size = 10) %>% scroll_box(width = "750px", height = "500px")
+```
+
+
+### Breast Feeding
+Please note no data were collected for the Le Leche League until 2011.
+```{r}
+Breastfeeding <- nutrition_df %>% subset(Class == "Breastfeeding") %>% 
+select(-Class, -Topic, -GeoLocation) %>% spread(Question, Data_Value)
+#change the name of some columns
+names(Breastfeeding)[c(7, 6, 5, 4)]<- c("Percent of births at Baby Friendly Facilities","La Leche League Leaders per 1000 births",
+"Certified Lactation Consultants per 1000 births",
+"Avg Maternity Practice Score")
+# convert colums 4 to 7 from character to numeric
+Breastfeeding[, 4:7] <- sapply(Breastfeeding[, 4:7],as.numeric)
+kable(head(Breastfeeding, 20)) %>% kable_styling(font_size = 10) %>% scroll_box(width = "750px", height = "500px")
+```
+
+
+<br/> Live Birth at Baby Friendly Facilities Summary (%)
+```{r}
+summary(Breastfeeding$`Percent of births at Baby Friendly Facilities`)
+```
+
+```{r}
+ggplot(Breastfeeding, aes(x=`Percent of births at Baby Friendly Facilities`)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666") + ggtitle("Live Births at Baby-Friendly \n Facilities Over The Years") 
+```
+<br/> Here the distribution is skewed to the right. The peak of the histogram hits where as stated in the summary above at an average of `9%`. Not every child will be born at a "baby-friendly" facility. Usually when someone is about to give birth (unplanned), they're taken to the nearest hospital/clinic unless the birth is as expected. Also, there is a possibility of the state or city being small and there is one or two clinics around. In this case, the percentage will be higher of having babies born at one of those "baby-friendly" facilities.
+
+```{r}
+ggplot(data=Breastfeeding, aes(x = YearEnd, y = `Avg Maternity Practice Score`, group=YearEnd)) + geom_line(aes(color=YearEnd))+ geom_point(aes(color=YearEnd)) + ggtitle("Practice in Infant Nutrition and Care")
+```
+<br/>This line graph shows averages among baby facilities over a 10 year span. It displays how much attention was drawn to the awareness of Practice in Infant nutrition and care. As the years increase more peope are becoming more involved and educated about this practce. As we can see, by the end of 2007-2008 most average scores ranged up to about 82 but after 2010 onto 2017 we see the scores increased atleast `17%`.
+
+
+### Sugar Drinks
+
+```{r}
+Sugar_Drinks <- nutrition_df %>% subset(Class == "Sugar Drinks" ) %>% select(-Class, -Topic, -YearStart, GeoLocation) %>% spread(Question, Data_Value) %>% separate(GeoLocation, c("Latitude", "Longitude"), sep = ",") 
+#remove none digit elements from the observations in both longitude and latitude columns and then convert remaining characters to numeric
+Sugar_Drinks$Latitude <- as.numeric( unlist(str_remove(Sugar_Drinks$Latitude, "^[(]")))
+Sugar_Drinks$Longitude <- as.numeric(unlist(str_remove(Sugar_Drinks$Longitude, "[)]$")))
+names(Sugar_Drinks)[c(1,5,6,7)] <- c( "Year",
+"Percent of secondary school that allow Soda or Fruit Drinks",
+"Percent of secondary school that allow Sport Drinks",
+"Avoid Sugar?")
+#include only complete cases
+Sugar_Drinks <- Sugar_Drinks[complete.cases(Sugar_Drinks), ]
+#convert certain columns to numeric
+Sugar_Drinks[, 5:6] <- sapply(Sugar_Drinks[, 5:6],as.numeric)
+kable(head(Sugar_Drinks, 30)) %>% kable_styling(font_size = 10) %>% scroll_box(width = "750px", height = "500px")
+```
+
+<br/>Which State's secondary schools prevent students from buying soda, fruit or sport drinks from venging machines?
+```{r google map}
+ggmap::register_google(key = "AIzaSyAPKYO8wG3mQUqSL6Ym4HeSIjkZmCwwVP8")
+leaflet(options = leafletOptions(minZoom = 2, maxZoom = 8)) %>% 
+  addProviderTiles("Esri") %>% 
+  setView(lng = -100.166666, lat = 48.166666, zoom = 4) %>% 
+  addMarkers(lng =Sugar_Drinks$Longitude, lat = Sugar_Drinks$Latitude, popup = Sugar_Drinks$LocationDesc, label = Sugar_Drinks$`Avoid Sugar?`)
+```
+<br/>They all seem to indicate NO about not allowing students to buy drinks other than water at school.
+
+<br/> Soda Summary
+```{r hist qq}
+#summary for soda and sports drinks
+summary(Sugar_Drinks$`Percent of secondary school that allow Soda or Fruit Drinks`)
+```
+
+<br/> Sports Summary
+```{r}
+summary(Sugar_Drinks$`Percent of secondary school that allow Sport Drinks`)
+```
+
+```{r}
+#plot histograms for both variables
+soda_fruit <- ggplot(data=Sugar_Drinks, aes(x = `Percent of secondary school that allow Soda or Fruit Drinks`)) + geom_histogram(color="darkblue", fill="blue") + labs(x="% Soda and Fruit Drinks")
+sports <- ggplot(data=Sugar_Drinks, aes(x = `Percent of secondary school that allow Sport Drinks`)) + geom_histogram(color="darkblue", fill="purple") + labs(x="% Sports Drink")
+# quantile-quantile plot for soda and sports drinks
+soda_fruit1 <- ggplot(Sugar_Drinks, aes(sample= `Percent of secondary school that allow Soda or Fruit Drinks`)) + stat_qq()
+sports1 <- ggplot(Sugar_Drinks, aes(sample= `Percent of secondary school that allow Sport Drinks`)) + stat_qq()
+# puts all 4 plots side by side for viewing and comparision
+plot_grid(soda_fruit, sports, soda_fruit1, sports1,labels = "AUTO")
+```
+<br/> Accoring to the graphs above, it seems as though more schools allowed kids to drink sports drinks rather than soda or fruit drinks. Graph A is slightly skewed to the right. They both do not show any extreme deviations so they can both come from a normal model. For soda and sugar drinks, the highest counts range between `10%` and `25%` while sports drinks populate most between `35%` and `55%`. This is proven via the summary above mentioning the mean and median for this data.
+
+A lot of times fruit or soda drinks have a empty calories and tons of sugar which make kids hyper then they become lethargic. On the other hand, sport drinks are viewed to replenish energy and keeping kids active. Many sport drinks are endorsed by athletes who kids look up to and wishes to emulate. Schools encourage physical fitness among kids hence why majority of them would allow more sport drinks than soda/fruit drinks.
+
+### Conclusion
+The awareness of educating moms the importance of breast feeding is rising.
+Secondary schools in every state will continue to allow students to buy drinks other than water from the schools. We can all agree that kids are active with or without sugar.
+
+_________________________________________________________________________________
+
+# Dataset 2: Google Play Store {.tabset .tabset-fade}
+
+### Introduction 
+
+This dataset was chosen to have an idea of how the apps are used with the Google Play Store. We will discover which types of apps are downloaded the most and which ones are people likely to pay for. We also get a view of how reviews or ratings affect what people download. Find dataset at [Kaggle.com](https://www.kaggle.com/lava18/google-play-store-apps) for further details.
+
+### Here is a view of the dataset.
+```{r}
+url = "https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/googleplaystore.csv"
+play_store <- read.csv(url, header = TRUE,  sep = ",", stringsAsFactors = FALSE)
+p <- head(play_store, 20)
+kable(p) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10) %>% scroll_box(width = "700px", height = "500px")
+```
+
+### Subset but cleaned data
+```{r}
+#prevents R from automatically changing integers to stanard notation
+options("scipen"= 999)
+#subset of the larger dataset with fewer columns and clean up
+play_store2 <- play_store %>% 
+  select(Category, Rating, Reviews, Size, Installs, Type, Price, Content.Rating) %>%
+  mutate(Size = extract_numeric(Size), Installs = gsub(",", "", Installs), Installs = gsub("\\+", "", Installs), Price = extract_numeric(Price) )
+names(play_store2)[4] <- "Size(MB)"
+play_store2 <- play_store2[-10473, ]
+play_store2 <- play_store2[!(play_store2$Type =="NaN"),] # deletes NaN from the Type column
+play_store2[play_store2 == "NaN"] <- "" #replaces all NaN objects with space or NA.
+play_store2$Price[play_store2$Price == 0] <- 0.00
+columns <- c("Rating", "Reviews", "Installs") #columns to covert to numeric from character
+play_store2[columns] <- play_store2 %>%
+  select(Rating, Reviews, Installs) %>% 
+  mutate_if(is.character,as.numeric)
+ps2 <- head(play_store2, 20)
+#preview of cleaned data
+kable(ps2) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10) %>% 
+  scroll_box(width = "85%", height = "400px")
+```
+
+### Downloads
+```{r}
+ggplotly(ggplot(play_store2, aes(x = Category, y = Installs, fill = Category)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6)) + ggtitle("Downloads Per Category") + theme(legend.position = "none"))
+```
+<br/> Games are the most downloaded types of apps with Communication second. It seems as though apps that are usually paid for has the least set of downloads which is understandable. Sometimes, most downloaded apps does not mean that people like them but just wanted to pursue a trial first then maybe delete them.
+
+### Content Ratings
+```{r}
+Content <- as.data.frame(table(play_store2$Content.Rating))
+colnames(Content) <- c("Grade","Count")
+Relative_Frequency = prop.table(Content$Count)
+Cummulative_Frequency  = cumsum(Relative_Frequency)
+Content <- transform(Content, Relative_Frequency = prop.table(Count), Cummulative_Frequency  = cumsum(Relative_Frequency))
+kable(Content) %>%
+  kable_styling("striped", full_width = F)
+```
+**80% of the apps are made for Everyone to use.**
+
+### Most Expensive
+
+Assuming $50 and up is considered expensive then most expensive apps belong in Medical and Lifestyle. People are willing to pay for apps that will benefit them in the long run.
+```{r}
+highprice <- play_store2 %>% filter(Price > 50) %>% arrange(Price)
+kable(highprice, caption = "Expensive Apps") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10) %>% 
+  scroll_box(width = "85%", height = "400px")
+```
+
+### Paid vs Free
+```{r}
+kable(table(play_store2$Type))
+```
+According to the dataset, 10000+ apps are free which is equvialient to approximately `93%` of the apps in Google Play Store. Free apps are more popular among the users and hence they get the most reviews.
+
+```{r}
+ggplotly(ggplot(play_store2, aes(x = Type, y = log(Installs), fill = Type)) + geom_boxplot() + ggtitle("Free Vs Paid Downloads"))
+```
+There are more downloads with free apps than paid ones. This makes sense because people would rather try out the app first before purchasing the professional version if there is such. Another reason is that developers make more money this way. They create the apps in a way that there are in-app purchases especially in games. It's a win-win- situation.
+
+### Average Ratings
+```{r density}
+summary(play_store2$Rating)
+ggplotly(ggplot(play_store2) + geom_density(aes(x = Rating), fill = "green") + ggtitle("Average Ratings in Google Play Store"))
+```
+This histogram is skewed to the lower end. `73%` of the ratings scores fall within `4 and 5`. This shows people are overall satisfied with majority of the apps in the Google Play Store.
+
+```{r plot}
+ggplotly(ggplot(play_store2, aes(x = Category, y = Rating)) + geom_point(aes(color = Category)) + geom_violin() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6)) + ggtitle("Average Ratings Per Category") + theme(legend.position = "none"))
+```
+<br/> Apps in Categories such as Education, Entertainment and Weather seems to do really well with the fact that their lowest ratings are no lower than 3.
+
+### Relationship?
+
+Which explanatory variable affects how much time an app is installed or downloaded: Rating or Reviews? 
+
+```{r}
+Review_plot <- ggplot(play_store2, aes(x= log(Reviews), y = log(Installs))) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6))
+Rating_plot <- ggplot(play_store2, aes(x=log(Rating), y = log(Installs))) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6))
+plot_grid(Review_plot, Rating_plot, labels = "AUTO")
+```
+
+<br/>There is a strong positive correlation between Installs and Reviews. This shows that people down load apps based on the reviews more than they do over the ratings. There are some outliers present in both plots especially in the relationship between Installs and Rating.
+
+### Conclusion
+What can be concluded from the reports above in the Google Play Store is that, people generally like to know how a product is doing before they invest time into it. Medical anf Finance apps are the apps people would most likely pay for. On the other hand Gaming and Communication are the top categories people download apps and are free for the public. 
+
+___________________________________________________________________________________
+
+# Dataset 3: Superbowl {.tabset .tabset-fade}
+
+### Introduction
+
+The data in this section is more a qualitative one. It was used to find out which teams or players had the most wins. Find the table on [ESPN](http://www.espn.com/nfl/superbowl/history/mvps) website.
+
+### Untidy
+```{r}
+url <- "http://www.espn.com/nfl/superbowl/history/mvps" #html table to be read
+# read in HTML data
+webtbl <- readHTMLTable(url, header = T) #import table into R
+mvps <- as.data.frame(webtbl) # set as a dataframe
+kable(head(mvps, 20)) %>% kable_styling(bootstrap_options = "striped", font_size = 10) %>% scroll_box(width = "600px", height = "400px")
+```
+
+
+### Tidy
+```{r}
+mvps <- mvps[-1, ] #remove first row which has column names
+names(mvps) <- c(" SUPERBOWL", "PLAYER", "HIGHLIGHTS") #rename columns
+# split the PLAYER column into 3 columns
+mvps <- mvps %>% separate(PLAYER, c("Player", "Position", "Team"), sep = ",") 
+kable(head(mvps)) %>% kable_styling(bootstrap_options = "hover", font_size = 10 )
+```
+
+### TOP MVP PLAYER
+```{r}
+top <- as.data.frame(table(mvps$Player))
+top <-arrange(top, desc(Freq)) 
+super <- filter(mvps, Player ==  as.character(top[1, 1]))
+cat("The top player is", as.character(top[1, 1]), "with", as.character(top[1,2]), "wins!", "\nHe won the following Superbowls:\n", as.character(super[,1]))
+```
+
+
+### Positions Winners Played
+```{r}
+# distinct type of positions played and won
+distinct_pos <- distinct(mvps, Position)
+Position_name <- c("Quaterback", "Line Backer", "Safety", "Fullback", "Running Back", "Wide Receiver", "Defense Line", "Defensive End", "Cornerback", "Kick Returner")
+winning_pos <- cbind(distinct_pos, Position_name)
+kable(winning_pos) %>% kable_styling(bootstrap_options = "hover", font_size = 10 )
+```
+
+
+### Which position is best?
+```{r}
+top_position <- as.data.frame(table(mvps$Position))
+names(top_position) <- c("Position", "Count")
+names(top_position) <- c("Position", "Count")
+ggplot(data=top_position, aes(x=Position, y=Count)) +
+  geom_bar(stat="identity", color = "blue", fill="lightblue")+
+  geom_text(aes(label=Count), color = "blue", vjust=-0.6, size=3.2) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=12)) + ggtitle("Best Postion On The Team") + theme(legend.position = "none")
+```
+<br/>Proof that Quaterback player is the best on the teams in football.
+
+### Popular Team?
+```{r}
+top_team <- as.data.frame(table(mvps$Team))
+names(top_team) <- c("Team", "Count")
+ggplot(data=top_team, aes(x=Team, y=Count)) +
+  geom_bar(stat="identity", fill="darkgreen")+
+  geom_text(aes(label=Count), color = "white", vjust=1.6, size=3.5) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=8)) + ggtitle("Team With Most Wins") + theme(legend.position = "none")
+```
+<br/>Looks like Dallas, New England and Pittsburgh tied for the top. 
