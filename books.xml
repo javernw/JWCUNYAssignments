@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<fav_books>
+   <books>
+      <title>OpenIntro Statistics</title>
+      <authors>David M Diez, Christopher D Barr, Mine &#199;etinkaya-Rundel</authors>
+      <edition>Third</edition>
+      <publisher>OpenIntro, Inc.</publisher>
+      <date_published>07/02/2015</date_published>
+   </books>
+   <books>
+      <title>R for Everyone: Advanced Analytics and Graphics</title>
+      <authors>Jared P. Lander</authors>
+      <edition>Second</edition>
+      <publisher>Addison-Wesley Professional</publisher>
+      <date_published>06/18/2017</date_published>
+   </books>
+   <books>
+      <title>Automated Data Collection with R A Practical Guide to Web Scraping and Text Mining</title>
+      <authors>Simon Munzert, Christian Rubba, Peter Mei&#223;ner, Dominic Nyhuis</authors>
+      <edition>First</edition>
+      <publisher>Wiley</publisher>
+      <date_published>01/20/2015</date_published>
+   </books>
+</fav_books>
