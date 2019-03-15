@@ -1,7 +1,7 @@
 {"favorite books":[
       {
       "title" : "OpenIntro Statistics",
-      "authors" : ["David M Diez", "Christopher D Barr", "Mine Cetinkaya-Rundel"],
+      "authors" : "David M Diez, Christopher D Barr, Mine Cetinkaya-Rundel",
       "edition" : "Third",
       "publisher" : "OpenIntro, Inc.",
       "date_published" : "07/02/2015"
@@ -15,7 +15,7 @@
       },
       {
       "title" : "Automated Data Collection with R A Practical Guide to Web Scraping and Text Mining",
-      "authors" : ["Simon Munzert", "Christian Rubba", "Peter Meibner", "Dominic Nyhuis"],
+      "authors" : "Simon Munzert, Christian Rubba, Peter Meibner, Dominic Nyhuis",
       "edition" : "First",
       "publisher" : "Wiley",
       "date_published" : "01/20/2015"
