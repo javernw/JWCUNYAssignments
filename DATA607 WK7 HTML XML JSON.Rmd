@@ -1,0 +1,94 @@
+---
+title: 'DATA607 WK7: HTML, XML, JSON'
+author: "Javern Wilson"
+date: "March 14, 2019"
+output:
+   html_document:
+     theme: paper
+     highlight: textmate
+     toc: true
+     code_folding: hide
+     toc_float: true
+     collapsed: false
+     smooth_scroll: false
+  
+---
+
+#### Task: Pick three of your favorite books on one of your favorite subjects.   At least one of the books should have more than one author.  For each book, include the title, authors, and two or three other attributes that you find interesting. Take the information that you've selected about these three books, and separately create three files which store the book's information in HTML (using an html table), XML, and JSON formats (e.g.  "books.html", "books.xml", and "books.json").   
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(XML)
+library(jsonlite)
+library(rjson)
+library(stringr)
+library(rvest)
+library(RCurl)
+library(dplyr)
+library(kableExtra)
+```
+
+## HTML
+```{r HTML}
+
+html_file <- read_html("https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/books.html")
+
+#parse html file into R
+books_html <- htmlParse(html_file)
+books_html_df <- books_html %>%  readHTMLTable(header = TRUE, stringAsFactors = FALSE) %>% as.data.frame()
+
+#clean table
+books_html_df <- books_html_df[,-6] #remove null column
+
+#rename columns
+names(books_html_df) <- c("Title", "Author(s)", "Edition", "Publisher", "Date Published")
+
+kable(books_html_df) %>% kable_styling(bootstrap_options = "striped")
+
+```
+<br/> <br/>
+
+## XML
+```{r XML}
+#get url
+ xml_file <- getURL("https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/books.xml")
+#extract information from web into R
+books_xml <- xmlParse(xml_file)
+
+#estract root node
+xroot <- xmlRoot(books_xml)
+
+#convert books.xml to dataframe
+books_xml_df <- xmlToDataFrame(xroot)
+names(books_xml_df) <- c("Title", "Author(s)", "Edition", "Publisher", "Date Published")
+
+kable(books_xml_df) %>% kable_styling(bootstrap_options = "striped")
+
+```
+<br/> <br/>
+
+## JSON
+```{r JSON}
+
+json_file <- "https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/books.json"
+
+#input file into R
+books_json <- fromJSON(file = json_file) 
+
+#class(books_json) is a list
+
+#convert "books_json" from a list to a dataframe
+books_json_df <- data.frame(matrix(unlist(books_json), nrow=3, byrow=T),stringsAsFactors=FALSE)
+
+names(books_json_df) <- c("Title", "Author(s)", "Edition", "Publisher", "Date Published")
+
+kable(books_json_df) %>% kable_styling(bootstrap_options = "striped")
+
+ 
+
+```
+<br/> <br/> <br/>
+
+## Conclusion
+#### All dataframes turns out to be the same. 
