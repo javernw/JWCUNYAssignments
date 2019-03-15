@@ -36,6 +36,8 @@ html_file <- read_html("https://raw.githubusercontent.com/javernw/JWCUNYAssignme
 
 #parse html file into R
 books_html <- htmlParse(html_file)
+books_html
+
 books_html_df <- books_html %>%  readHTMLTable(header = TRUE, stringAsFactors = FALSE) %>% as.data.frame()
 
 #clean table
@@ -55,6 +57,7 @@ kable(books_html_df) %>% kable_styling(bootstrap_options = "striped")
  xml_file <- getURL("https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master/books.xml")
 #extract information from web into R
 books_xml <- xmlParse(xml_file)
+books_xml
 
 #estract root node
 xroot <- xmlRoot(books_xml)
@@ -75,6 +78,7 @@ json_file <- "https://raw.githubusercontent.com/javernw/JWCUNYAssignments/master
 
 #input file into R
 books_json <- fromJSON(file = json_file) 
+books_json 
 
 #class(books_json) is a list
 
