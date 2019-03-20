@@ -1,0 +1,158 @@
+---
+title: "DATA607 Project 3"
+author: "Javern Wilson"
+date: "March 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(DBI)
+library(RMySQL)
+library(RSQLite)
+library(tidyverse)
+library(kableExtra)
+library(gganimate)
+library(gifski)
+library(plotly)
+library(ggmap)
+library(leaflet)
+```
+## Tobacco
+As mentioned earlier, Tobacco is one of the top Chronic Disease Indicator of preventable deaths in the US.
+
+```{r}
+
+db_user <- 'newuser'
+db_password <- 'pass'
+db_name <- 'uscdi'
+db_host <- '127.0.0.1' # for access to SQL Database hosted on Google Cloud
+db_port <- 3306
+
+drv <- dbDriver("MySQL")
+
+# creating tbdb connection object with RMysql package
+connect <- dbConnect(drv, user = db_user, password = db_password, dbname = db_name, host = db_host, port = db_port)
+
+tblTobacco <- dbGetQuery(connect, "SELECT * FROM USChronicDiseaseIndicators WHERE Topic = 'Tobacco' AND LocationAbbr <> 'US';" )
+```
+
+
+```{r}
+Tobacco_df <- tblTobacco
+
+dim(Tobacco_df)
+
+kable(head(Tobacco_df, 20)) %>% kable_styling(bootstrap_options = "striped", full_width = T,  font_size = 10) %>%  scroll_box(height = "500px")
+
+```
+
+
+```{r}
+#remove emply columns
+Tobacco_df <- Tobacco_df[!sapply(Tobacco_df, function(t) all(t == ""))]
+Tobacco_df <- Tobacco_df %>% select("YearEnd", "LocationAbbr", "Question", "DataValue", "Stratification1", "ResponseID") %>% separate(ResponseID, c("Latitude", "Longitude"), sep = ",")
+
+#remove none digit elements from the observations in both longitude and latitude columns and then convert remaining characters to numeric
+Tobacco_df$Latitude <- as.numeric(unlist(str_remove(Tobacco_df$Latitude, "^[(]"))) 
+Tobacco_df$Longitude <- as.numeric(unlist(str_remove(Tobacco_df$Longitude, "[)]$")))
+
+#rename a few columns
+names(Tobacco_df)[c(1, 2, 5)] <- c("Year", "State", "Stratification")
+
+#If any cell for the row is empty then remove the row
+Tobacco_df <- Tobacco_df[!Tobacco_df$DataValue == "", ]
+
+```
+
+
+After making changes to the Tobacco dataframe, here is a preview to a more condensed form
+```{r}
+dim(Tobacco_df)
+kable(head(Tobacco_df, 100)) %>% kable_styling(font_size = 10) %>%  scroll_box(height = "500px")
+```
+
+### Questions
+These are the type of questions looked at concerning Tobacco
+```{r}
+Questions <- unique(Tobacco_df$Question)
+kable(Questions) %>% kable_styling(font_size = 12) %>%  scroll_box(height = "300px")
+
+```
+
+<br/>A Second Tobacco Dataframe was created because some of the DataValues are categorical (Yes, No) while others are numeric.The first Tobacco Dataframe now has 18681 obs with 7 variables.
+```{r}
+
+#separate categorical datavalues from numerical ones and place in a new df
+Tobacco_df2 <- subset(Tobacco_df, Tobacco_df$DataValue == c("Yes","No"))
+dim(Tobacco_df2)
+
+kable(Tobacco_df2) %>% kable_styling(font_size = 10) %>%  scroll_box(height = "300px")
+
+#remove those placed in Tobacco_df2 from Tobacco_df
+new_Tobacco_df <- Tobacco_df[!(Tobacco_df$DataValue %in% Tobacco_df2$DataValue), ]
+
+#convert the datavalue column to numeric
+
+new_Tobacco_df$DataValue <- as.numeric(new_Tobacco_df$DataValue)
+new_Tobacco_df$Year <- as.numeric(new_Tobacco_df$Year)
+
+dim(new_Tobacco_df)
+
+
+```
+
+### Exploration
+
+
+```{r}
+
+ggplotly(ggplot(new_Tobacco_df, aes(x=State, y=Year, fill=Year)) +
+  geom_bar(stat="identity") +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6)) + ggtitle("Data collected Over the years for States Concerning Tobacco"))
+
+```
+<br/> Kansas had a lot to say as most reports came from that state
+
+
+```{r}
+
+new_Tobacco_df %>% filter(Question == c("Current smokeless tobacco use among youth", "Current cigarette smoking among youth")) %>%  ggplot(aes(x = Year, y = DataValue, fill = Question)) + geom_bar(stat = "identity", position = position_dodge())+ ggtitle("Youth (Grade 9-12) Using Tobacco Over the Years") +  scale_fill_discrete(labels = c("Smokeless Tobacco", "Smoke Tobacco"))
+
+
+```
+<br/>It is likely that if the yout is using smokeless Tobacco, then they'll smoke it too.
+
+
+
+```{r}
+
+new_Tobacco_df %>% filter(!Stratification == "Overall") %>%  ggplot(aes(x= Stratification, y=Year, fill=Stratification)) +
+  geom_bar(stat="identity") +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(axis.text=element_text(size=6)) + transition_time(round(Year)) + labs(title = "Year: {frame_time}")
+
+```
+Based on this research, most of Tobacco customers are Male and the top race is White.
+
+### Amount of Tobacco Product Excise Tax?
+
+Increasing the price of tabacco discourages people from buying them, especially youths. This way improvements in health will get better in the long term. Majority of the states did not excise tax from the Tobacco product.
+```{r}
+
+Tobacco_df2 %>%  filter(Question == "Amount of tobacco product excise tax") %>% ggplot(aes(x = DataValue)) + geom_bar() 
+
+```
+
+### States that allow stronger local tobacco control and prevention laws
+<br/> Map below shows which States did and did not allow stronger laws.
+```{r}
+
+Tobacco_df2 %>%  filter(Question == "States that allow stronger local tobacco control and prevention laws") %>% ggplot(aes(x = DataValue)) + geom_bar() 
+
+ggmap::register_google(key = "AIzaSyAPKYO8wG3mQUqSL6Ym4HeSIjkZmCwwVP8")
+leaflet(options = leafletOptions(minZoom = 2, maxZoom = 8)) %>% 
+  addProviderTiles("Esri") %>% 
+  setView(lng = -100.166666, lat = 48.166666, zoom = 4) %>% 
+  addMarkers(lng =Tobacco_df2$Longitude, lat = Tobacco_df2$Latitude, popup = Tobacco_df2$State, label = Tobacco_df2$DataValue)
+```
+
