@@ -1,0 +1,72 @@
+---
+title: 'DATA607 WK9 Assignment: APIs'
+author: "Javern Wilson"
+date: "March 29, 2019"
+output: 
+  html_document:
+    toc: true
+    code_folding: hide
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: sandstone
+    highlight: kate
+---
+
+
+## Books
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(httr)
+library(plyr)
+library(kableExtra)
+library(jsonlite)
+library(tidyverse)
+```
+
+```{r}
+#get data via API
+BOOKS.json <- GET("https://api.nytimes.com/svc/books/v3/lists.json?list=paperback-nonfiction&api-key=3AzC0RPE5QAZ0NAF7rr3cyCPG6sJGwW5")
+
+#parse from JSON into R
+non_fiction <- content(BOOKS.json, "parse")
+
+# create a vector with the results from parsing
+paper_non_fict <-sapply(non_fiction$results,unlist)
+```
+
+When working with JSON and importing to an R object, it usually ends up as a list. Goal is to unlist, transpose, then convert to dataframe. "rbind.fill" will be used to padd the dataframe where data is missing. Based on the imported data there are 15 books.
+
+```{r}
+#displays as a dataframe but with the desired column names are the row names
+topbooks<- t(do.call("rbind.fill", lapply(lapply(paper_non_fict, t), data.frame, stringsAsFactors = F)))
+
+#so i transposed it a second time
+topbooks <- as.data.frame(t(topbooks))
+
+kable(topbooks) %>% kable_styling("striped", "hovered", font_size = 10) %>% scroll_box(height = "500px")
+
+
+
+```
+
+
+
+## Articles 
+This is just to practice more. Just wanted to see if the same code would work for the multi-level variables. There are 235 variables in this one.
+```{r}
+
+articles.json <- GET("https://api.nytimes.com/svc/archive/v1/2019/3.json?api-key=3AzC0RPE5QAZ0NAF7rr3cyCPG6sJGwW5")
+
+articles <- content(articles.json, "parse")
+y <-sapply(articles$response$docs, unlist)
+
+x <- t(do.call("rbind.fill", lapply(lapply(y, t), data.frame, stringsAsFactors = F)))
+x <- as.data.frame(t(x))
+
+kable(head(x, 20)) %>% kable_styling("striped", "hovered", font_size = 11) %>% scroll_box(height = "500px")
+
+```
+
