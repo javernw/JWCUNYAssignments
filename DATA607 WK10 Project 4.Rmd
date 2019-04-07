@@ -9,7 +9,7 @@ output:
     toc_float:
       collapsed: false
       smooth_scroll: false
-    theme: sandstone
+    theme: united
     highlight: kate
 ---
 
@@ -30,7 +30,7 @@ library(gmodels)
 
 ```
 
-## Load Files Into R {.tabset .tabset-fade}
+## 1. Load Files Into R {.tabset .tabset-fade}
 
 ### Non-Spam
 
@@ -78,15 +78,21 @@ spamnospam <- rbind(ns2, s2)
 dim(spamnospam)
 ```
 
-## Create Corpus
+## 2. Create Corpus
 
 ```{r}
 corpus <- Corpus(VectorSource(spamnospam$email))
 corpus
+
+#Print out the data on the 20th email
+corpus[[20]]
+
+#print out the content of the 20th email
+corpus[[20]][1]
 ```
 
 
-## Clean Corpus
+## 3. Clean Corpus
 
 Removing special characters, stopwords, white spaces, punctuations, converting to lowercase letters and stemming words.
 ```{r message=FALSE, warning=FALSE}
@@ -118,18 +124,21 @@ corpus2 <- cleancorpus(corpus)
 
 ```
 
-## Document Term Matrix
+## 4. Document Term Matrix
 
-The DocumentTermMatrix function takes a corpus and create a data structure which is called called a Document Term Matrix and is compiled of rows and columns.
+The DocumentTermMatrix function takes a corpus and create a data structure where you want to treat each document as a row.
 ```{r message=FALSE, warning=FALSE}
 corpus2_dtm <- DocumentTermMatrix(corpus2)
+inspect(corpus2_dtm[0:5, 300:305])
+
 
 # removes terms that are more sparse than 0.99
 corpus2_dtm <- removeSparseTerms(corpus2_dtm, .99)
+corpus2_dtm
 
 ```
 
-## Exploration {.tabset .tabset-fade}
+## 5. Exploration {.tabset .tabset-fade}
 
 ### No Spam 
 
@@ -181,7 +190,7 @@ wordcloud(corpus2[spam], min.freq=300, max.words = 100, colors=brewer.pal(8, "Da
 
 ```
 
-## Model for assessing Non-Spam and Spam Emails
+## 6. Model for Assessing Non-Spam and Spam Emails
 
 ### Divide the Corpus into training and test data (80:20)
 ```{r}
@@ -222,8 +231,7 @@ test_dtm <- removeSparseTerms(test_dtm, 0.99)
 
 ### Naive Bayes Classifier
 
-Naive Bayes classifiers is used to calculate the probability of a sample being part of a certain category based on prior knowledge. Based on the Bayes Theorem, the Naive Bayes Classifier assumes that every feature of a sample is independent of each other.
-
+Naive Bayes classifiers is used to calculate the probability of a sample being part of a certain category based on prior knowledge. Based on the Bayes Theorem, the Naive Bayes Classifier *assumes that every feature of a sample is independent of each other*.
 That means that each character of a sample contributes independently to determine the probability of the classification of that sample hence outputting the category of the highest probability of the sample. Naive Bayes classification needs information on each word in a message so we count number of occurances and convert the document-term matrices.
 
 ```{r}
@@ -237,9 +245,9 @@ convert_score <- function(x) {
 trains <- apply(train_dtm, 2, convert_score)
 test <- apply(test_dtm, 2, convert_score)
 
-classify <- naiveBayes(trains, factor(training_data$score))
+classify <- naiveBayes(trains, factor(training_data$score)) #learns the data
 
-test_prediction <- predict(classify, newdata=test)
+test_prediction <- predict(classify, newdata=test) #predicts data
 
 CrossTable(test_prediction, testing_data$score, prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE, dnn = c('Prediction', 'Actual'))
 
@@ -249,7 +257,7 @@ There are `17` messages that were classified as spam that should have been non-s
 
 ## Sources
 
-**For more information, please visit these sites:** <br/>
+**For more information, please visit these sites:**
 
   + [Understanding Naive Bayes with R](https://www.r-bloggers.com/understanding-naive-bayes-classifier-using-r/)
   + [Text Mining Example](https://www3.nd.edu/~steve/computing_with_data/20_text_mining/text_mining_example.html#/)
@@ -257,6 +265,6 @@ There are `17` messages that were classified as spam that should have been non-s
   + [Basic Text Mining with R](https://rpubs.com/pjmurphy/265713)
   + [Video Tutorial](https://www.youtube.com/watch?v=pFinlXYLZ-A)
   
-**Download files to directory here:**
+**Download files to directory from here:**
 
   + [Ham-Spam](https://spamassassin.apache.org/old/publiccorpus/)
