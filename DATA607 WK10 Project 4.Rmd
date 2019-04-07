@@ -1,0 +1,262 @@
+---
+title: 'DATA607 WK 10 Project 4: Text Mining'
+author: "Javern Wilson"
+date: "April 6, 2019"
+output: 
+  html_document:
+    toc: true
+    code_folding: show
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: sandstone
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tm)
+library(tidytext)
+library(tidyverse)
+library(SnowballC)
+library(wordcloud)
+library(stopwords)
+library(RColorBrewer)
+library(e1071)
+library(gmodels)
+
+```
+
+## Load Files Into R {.tabset .tabset-fade}
+
+### Non-Spam
+
+```{r}
+
+#infile.choose()
+nospam_folder <- "C:\\Users\\Javern\\Documents\\Data Science MS\\DATA607\\spamnospam\\easy_ham"
+
+ns <- list.files(path = nospam_folder)
+ns <- paste(nospam_folder, "\\", ns, sep = "")
+ns1 <- lapply(ns, FUN = readLines)
+ns1 <- lapply(ns1, FUN = paste, collapse = "")
+
+#Create a dataframe of non-spam files
+ns2 <- data.frame(unlist(ns1), stringsAsFactors = F)
+
+# add a score column
+ns2$score <- 0
+names(ns2) <- c("email", "score")
+```
+
+### Spam
+```{r}
+
+spam_folder <- "C:\\Users\\Javern\\Documents\\Data Science MS\\DATA607\\spamnospam\\spam_2"
+
+s <- list.files(path = spam_folder)
+s <- paste(spam_folder, "\\", s, sep = "")
+s1 <- lapply(s, FUN = readLines)
+s1 <- lapply(s1, FUN = paste, collapse = "")
+
+#create a dataframe of spam files
+s2 <- data.frame(unlist(s1), stringsAsFactors = F)
+
+# add a score column
+s2$score <- 1
+names(s2) <- c("email", "score")
+```
+
+### As One Dataframe
+```{r}
+spamnospam <- rbind(ns2, s2) 
+
+#show dimesions
+dim(spamnospam)
+```
+
+## Create Corpus
+
+```{r}
+corpus <- Corpus(VectorSource(spamnospam$email))
+corpus
+```
+
+
+## Clean Corpus
+
+Removing special characters, stopwords, white spaces, punctuations, converting to lowercase letters and stemming words.
+```{r message=FALSE, warning=FALSE}
+
+#Create function to clean corpus
+cleancorpus <- function(cc){
+
+  for (j in seq(cc)) {
+      cc[[j]] <- gsub("/", " ", cc[[j]])
+      cc[[j]] <- gsub("[_]+", " ", cc[[j]])
+      cc[[j]] <- gsub("@", " ", cc[[j]])
+      cc[[j]] <- gsub("\\|", " ", cc[[j]])
+  }
+
+  cc2 <- tm_map(cc, removeNumbers)
+  cc2 <- tm_map(cc2, str_replace_all, pattern = "[[:punct:]]", replacement = " ")
+  cc2 <- tm_map(cc2, str_replace_all, pattern = "\\W", replacement = " ")
+  cc2 <- tm_map(cc2, tolower)
+  cc2 <- tm_map(cc2, removeWords, stopwords("english"))
+  cc2 <- tm_map(cc2, tolower)
+  cc2 <- tm_map(cc2, stemDocument)
+  cc2 <- tm_map(cc2, stripWhitespace)
+
+return(cc2)
+
+}
+
+corpus2 <- cleancorpus(corpus)
+
+```
+
+## Document Term Matrix
+
+The DocumentTermMatrix function takes a corpus and create a data structure which is called called a Document Term Matrix and is compiled of rows and columns.
+```{r message=FALSE, warning=FALSE}
+corpus2_dtm <- DocumentTermMatrix(corpus2)
+
+# removes terms that are more sparse than 0.99
+corpus2_dtm <- removeSparseTerms(corpus2_dtm, .99)
+
+```
+
+## Exploration {.tabset .tabset-fade}
+
+### No Spam 
+
+#### Frequent Non-Spam Terms
+```{r}
+nospam <- which(spamnospam$score == 0)
+
+nospamdtm <-DocumentTermMatrix(corpus2[nospam])
+nospamdtm <- removeSparseTerms(nospamdtm, .99)
+
+findFreqTerms(nospamdtm, lowfreq=500) #appears atleast 500 times
+
+```
+#### Words Asscociation
+```{r}
+findAssocs(nospamdtm, "support", 0.8) # correlated with other words atleast 80% or more
+```
+
+#### Word Cloud For Non-Spam
+```{r}
+set.seed(125)
+wordcloud(corpus2[nospam], min.freq=400, max.words = 100, colors=brewer.pal(8, "Dark2"))
+```
+
+
+### Spam
+
+Frequent Spam Terms
+```{r}
+
+spam <- which(spamnospam$score == 1)
+
+spamdtm <-DocumentTermMatrix(corpus2[spam])
+spamdtm <- removeSparseTerms(spamdtm, .99)
+
+findFreqTerms(spamdtm, lowfreq=500)
+```
+
+#### Words Association
+```{r}
+
+findAssocs(spamdtm, "admin", 0.8)
+```
+
+#### Word Cloud For Spam
+```{r}
+set.seed(200)
+wordcloud(corpus2[spam], min.freq=300, max.words = 100, colors=brewer.pal(8, "Dark2"))
+
+```
+
+## Model for assessing Non-Spam and Spam Emails
+
+### Divide the Corpus into training and test data (80:20)
+```{r}
+samp <- round((0.80 * nrow(spamnospam)))
+outcomes <- nrow(spamnospam)
+
+set.seed(300)
+train <- sample(outcomes, size = samp, replace = F)
+
+training_data <- spamnospam[train,] #3118
+testing_data <- spamnospam[-train, ] #780
+```
+
+How much spam and non-spam elements in training data from sample?
+```{r}
+
+cat("Spam:", sum(training_data$score == 1)); cat("No Spam:", sum(training_data$score == 0))
+```
+
+
+Create Corpus for both training and test data
+```{r message=FALSE, warning=FALSE}
+
+training_corpus <- Corpus(VectorSource(training_data$email))
+test_corpus <- Corpus(VectorSource(testing_data$email))
+
+
+train_data <- cleancorpus(training_corpus)
+train_dtm <- DocumentTermMatrix(train_data)
+train_dtm <- removeSparseTerms(train_dtm, 0.99)
+
+test_data <- cleancorpus(test_corpus)
+test_dtm <- DocumentTermMatrix(test_data)
+test_dtm <- removeSparseTerms(test_dtm, 0.99)
+
+```
+
+
+### Naive Bayes Classifier
+
+Naive Bayes classifiers is used to calculate the probability of a sample being part of a certain category based on prior knowledge. Based on the Bayes Theorem, the Naive Bayes Classifier assumes that every feature of a sample is independent of each other.
+
+That means that each character of a sample contributes independently to determine the probability of the classification of that sample hence outputting the category of the highest probability of the sample. Naive Bayes classification needs information on each word in a message so we count number of occurances and convert the document-term matrices.
+
+```{r}
+# function to convert score to Not Spam (No) or Spam (Yes)
+convert_score <- function(x) {
+  y <- ifelse(x > 0, 1,0)
+  y <- factor(y, levels=c(0,1), labels=c("Not Spam", "Spam"))
+  y
+}
+
+trains <- apply(train_dtm, 2, convert_score)
+test <- apply(test_dtm, 2, convert_score)
+
+classify <- naiveBayes(trains, factor(training_data$score))
+
+test_prediction <- predict(classify, newdata=test)
+
+CrossTable(test_prediction, testing_data$score, prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE, dnn = c('Prediction', 'Actual'))
+
+```
+
+There are `17` messages that were classified as spam that should have been non-spam and `2` that are spam, classified as non-spam. By using this model, the theorem provided over `97%` of all SMS messages were correct by type, spam or non-spam even though there is a `0.6%` chance (not bad) of the user missing an important email.
+
+## Sources
+
+**For more information, please visit these sites:** <br/>
+
+  + [Understanding Naive Bayes with R](https://www.r-bloggers.com/understanding-naive-bayes-classifier-using-r/)
+  + [Text Mining Example](https://www3.nd.edu/~steve/computing_with_data/20_text_mining/text_mining_example.html#/)
+  + [Gentle Introduction to Text Mining](https://eight2late.wordpress.com/2015/05/27/a-gentle-introduction-to-text-mining-using-r/)
+  + [Basic Text Mining with R](https://rpubs.com/pjmurphy/265713)
+  + [Video Tutorial](https://www.youtube.com/watch?v=pFinlXYLZ-A)
+  
+**Download files to directory here:**
+
+  + [Ham-Spam](https://spamassassin.apache.org/old/publiccorpus/)
