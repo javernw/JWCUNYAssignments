@@ -1,0 +1,50 @@
+---
+title: 'DATA607 WK11: Recommender Systems'
+author: "Javern Wilson"
+date: "April 8, 2019"
+output: html_document
+---
+
+## Netflix <br/>
+
+The recommendations provided by Netflix influence what you watch. In most cases, these recommendations receives the highest hit which are then personalized to fit your preferences. They are driven by learning algorithms which is why each user's recommendations are different. Having a better set of recommendations makes it easier for you to browse through the kind of content you like to watch. 
+
+### Scenario Design 
+
+#### 1. Who are your target customers?
+
+Netflix is an internet streaming software which allows you to watch content through any internet connected device which include smart TVs, smartphones, tablets, game consoles etc. Netflix has 139 million subscribers globally. Target [customers](https://www.business2community.com/marketing/look-new-target-audience-netflix-subscribers-01813457) would be:
+
+  + Anyone who is up to date with technology
+  + People who do not have time to watch live tv
+  + People who like to binge watch tv shows and movies
+  + Households with kids
+
+#### 2. What are their key goals?
+To get as much subscribers by improving the customer experience of their entertainment services. They try to get as much people to watch their content with unlimited hours. 
+
+#### 3. How can you help them accomplish those goals?
+
+As this assignment is based on Recommender systems, providing insights on how to improve their recommendations as this is the best way to better understand their customers indirectly.
+
+### How Netflix Recommender system works
+
+Netflix recommender system is based on collaborative filtering therefore they need a certain amount of data to understand it before making recommendations. When users sign up, the software usaually require the individual to choose a few shows to jump start their recommendations. They [learn](https://help.netflix.com/en/node/100639) about the customer's preference based on:
+
+  + How customers interact with the servie
+  + Group customers in clusters of people with similar tastes and preferences
+  + Information based on genre, actors, titles and the like.
+
+Also, with their ratings system, every time you leave a rating, you're teaching them what kinds of things you enjoy.
+  
+### Reverse Engineering
+
+  - Netflix recommendations are heavily skewed towards what you are currently watching hence you get stuck in a recommendation rut or lack variety of choices. However, the more you watch, the more your suggested content becomes relevant.
+
+  - Recommendations get diluted when multiple people are using the same profiles.
+
+  - To show your approval, it is either a "thumbs up" or "thumbs down".
+
+### Recommendations
+
+ Overall, I am satisfied with Netflix. One suggestion would be is that the chances of anyone re-watching every movie or show that they previously watched is very slim. Furthermore, this makes the user's browsing experience less optimal. Removing it or moving the list to the bottom would be good.
