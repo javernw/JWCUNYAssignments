@@ -1,0 +1,215 @@
+---
+title: 'DATA607 WK13: NoSQL'
+author: "Javern Wilson"
+date: "April 17, 2019"
+output: 
+  html_document:
+    toc: true
+    code_folding: show
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: journal
+    
+---
+
+#### For this assignment, you should take information from a relational database and migrate it to a NoSQL database of your own choosing.
+
+# Best Chick Flicks 1995 - 2019
+
+```{r message=FALSE, warning=FALSE}
+library(rvest)
+library(XML)
+library(RCurl)
+library(tidyverse)
+library(plyr)
+library(DBI)
+library(RMySQL)
+library(RSQLite)
+library(DT)
+library(mongolite)
+```
+
+
+## Scraping the data from the web
+```{r message=FALSE, warning=FALSE}
+links <-paste0("https://www.imdb.com/list/ls058361070/?sort=list_order,asc&st_dt=&mode=detail&page=", 1:2)
+
+Rank <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".text-primary") %>% 
+                    html_text() %>%
+                    parse_number() %>% 
+                    na.omit() 
+                  
+                })
+Rank <- unlist(Rank)
+
+Title <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".lister-item-header a") %>% 
+                    html_text() %>%
+                    gsub(" The Wonderful World.+", NA, .) %>% 
+                    na.omit()
+                  
+                })
+Title <- unlist(Title)
+
+Year <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".text-muted.unbold") %>% 
+                    html_text() %>%
+                    gsub("\\(\\d{4}.\\d{4}\\)", NA, .) %>% 
+                    parse_number() %>% 
+                    na.omit()
+                  
+                })
+Year <- unlist(Year)
+
+
+Genre <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".genre") %>% 
+                    html_text() %>%
+                    gsub("\n", "", .)
+                  
+                })
+Genre <- unlist(Genre)
+
+Rated <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".certificate") %>% 
+                    html_text()
+                  
+                })
+
+Rated <- unlist(Rated)
+
+# had to look for the movies that did not have a grade to append NA
+for(j in c(111, 150, 152, 158)){
+  Rated <- append(Rated, NA, after = j)
+}
+
+Runtime <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".runtime") %>% 
+                    html_text()
+                  
+                })
+
+Runtime <- unlist(Runtime)
+
+Star_Rating <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".ipl-rating-star.small .ipl-rating-star__rating") %>% 
+                    html_text()
+                  
+                })
+Star_Rating <-  unlist(Star_Rating)
+
+Director <- lapply(links,
+                function(pg){
+                  pg %>% read_html() %>% 
+                    html_nodes(".text-muted a:nth-child(1)") %>% 
+                    html_text()
+                  
+                })
+Director <- unlist(Director)
+
+imdb_movies <- data.frame(Rank, Title, Year, Genre, Rated, Runtime, Star_Rating, Director)
+
+datatable(imdb_movies, rownames = F)
+
+```
+
+
+## SQL 
+```{r}
+db_user <- 'newuser'
+db_password <- 'pass'
+db_name <- 'imdb_movies'
+db_host <- '127.0.0.1' # for local access to SQL 
+db_port <- 3306
+
+drv <- dbDriver("MySQL")
+
+# creating tbdb connection object with RMysql package
+connect <- dbConnect(drv, user = db_user, password = db_password, dbname = db_name, host = db_host, port = db_port)
+
+```
+
+### Loading table into SQL from R 
+```{r loading}
+
+#dbListTables(connect)
+#dbListFields(connect, 'tblbest_chick_flicks')
+
+ #Drop table if it already exists
+if (dbExistsTable(connect, "tblbest_chick_flicks"))
+    dbRemoveTable(connect, "tblbest_chick_flicks")
+
+# Write the data frame to the MySQL
+dbWriteTable(connect, name = "tblbest_chick_flicks", value = imdb_movies, append = T,  row.names = FALSE)
+
+
+```
+
+![](https://github.com/javernw/JWCUNYAssignments/blob/master/IMDB.PNG?raw=true)
+
+
+## Write to [CSV](https://github.com/javernw/JWCUNYAssignments/blob/master/bestchickflicks.csv)
+
+```{r}
+#write.csv(imdb_movies, file = "bestchickflicks.csv", row.names = F)
+```
+
+## MongoDB (NoSQL)
+
+### Load relational data into MongoDB
+```{r}
+my_collection = mongo(collection = "bestchickflicks", db = "imdbmovies") # create connection, database and collection
+my_collection$insert(imdb_movies)
+```
+
+A view of the first record from the MongoDB with R.
+```{r}
+my_collection$iterate()$one() 
+```
+
+
+Over on the Mongo server/terminal, I checked to see if the database and collection was created using the **db** and **show collections** command. After that the **db.bestchickflicks.find()** command was used to view the data imported via R.
+
+![](https://github.com/javernw/JWCUNYAssignments/blob/master/mongodb1.PNG?raw=true)
+
+![](https://github.com/javernw/JWCUNYAssignments/blob/master/mongo1.PNG?raw=true)
+
+A little difficult to read.
+
+<br/> <br/>
+Using **db.bestchickflicks.find().pretty()** puts the output in a structured format.
+![](https://github.com/javernw/JWCUNYAssignments/blob/master/mongo2.PNG?raw=true)
+
+<br/> <br/>
+
+### Export to a [.json file](https://github.com/javernw/JWCUNYAssignments/blob/master/bestchickflicks.json)
+
+![](https://github.com/javernw/JWCUNYAssignments/blob/master/mongo4.PNG?raw=true)
+
+
+## Sources
+
+
+[MongoDB Tutorial (Written)](https://www.tutorialspoint.com/mongodb/mongodb_query_document.htm)
+
+[MongoDB Tutorial (Video)](https://www.youtube.com/watch?v=pWbMrx5rVBE)
+
+[MongoDB Set Up Connection (Video)](https://www.youtube.com/watch?v=GtD93tVZDX4)
+
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 598px;"></div>
