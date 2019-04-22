@@ -202,6 +202,25 @@ Using **db.bestchickflicks.find().pretty()** puts the output in a structured for
 
 ![](https://github.com/javernw/JWCUNYAssignments/blob/master/mongo4.PNG?raw=true)
 
+## Relational Database VS. NoSQL
+
+**Scalability**
+
+Relational Databases require a single server to host your entire database. When the load increases on RDBMS database, we scale vertically by increasing hardware power and this involves purchasing expensive and bigger servers. With NoSQL databases, they are designed to expand horizontally by increasing the databases servers in the pool of resources to reduce the load.
+
+**Data structure**
+
+SQL databases are designed to handle structured data defined by relationships. NoSQL can handle unstructured data, that is, it does not limit storable data types. You can add new types as business needs change.. For instance, when adding data, if the next row requires an additional column, it can be added with no issue. SQL on the other hand will display an error message stating that the row has one colmun too much.
+
+**Data Models**
+
+No schema is needed when creating a database when it comes to NoSQL but SQL databases requires that you do.
+
+**Data Representation**
+
+SQL databases are table based databases with n rows and q columns.NoSQL databases are document based, key-value pairs, graph databases or wide-column stores which do not have standard schema definitions which it needs to adhere to.
+ 
+
 
 ## Sources
 
