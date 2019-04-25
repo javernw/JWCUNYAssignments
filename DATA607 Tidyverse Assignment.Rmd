@@ -1,0 +1,114 @@
+---
+title: 'TidyVerse: Purrr and Stringr'
+author: "Javern Wilson"
+date: "April 24, 2019"
+output: 
+  html_document:
+    toc: true
+    code_folding: show
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: flatly
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(kableExtra)
+```
+
+# Purrr
+
+Let's say we have a dataset of alcohol consumption among countries and we want to find the mean consumption of beer, spirit, wine and pure alcohol.
+
+```{r}
+alcohol <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/alcohol-consumption/drinks.csv", sep = ",", stringsAsFactors = F)
+
+```
+
+<br/>
+
+With base R we would type:
+
+```{r}
+beer <- mean(alcohol$beer_servings)
+spirit <- mean(alcohol$spirit_servings)
+wine <- mean(alcohol$wine_servings)
+pure <- mean(alcohol$total_litres_of_pure_alcohol)
+
+c(beer, spirit, wine, pure)
+
+```
+
+
+As you can see, writing code like this is not very efficient because it involves a lot of copy and pasting and can make possible errors. To solve this issue of minimizing repetition with further replication, we can use `purrr`. `purrr` enhances R's functional programming (FP) toolkit by providing a complete and consistent set of tools for working with functions and vectors. 
+
+`purrr` allows you to *map* functions to data. 
+
++ map() makes a list.
++ map_lgl() makes a logical vector.
++ map_int() makes an integer vector.
++ map_dbl() makes a double vector.
++ map_chr() makes a character vector.
+
+Appropriately the basic function in purrr is called map() and it transforms the input by applying a function to each element and returning a vector the same length as the input.
+
+We can use this function to perform the same computations as above.
+
+```{r}
+map_dbl(alcohol[, c(2, 3, 4, 5)], mean)
+
+```
+
+<br/> 
+
+Pipes can also be used...
+```{r}
+alcohol[, c(2, 3, 4, 5)] %>% map_dbl(mean)
+```
+
+<br/>
+
+#### Find other 'purrr' functions [here](https://github.com/rstudio/cheatsheets/blob/master/purrr.pdf)
+
+<br/>
+
+# Stringr
+
+This package is used to manipulate strings. For instance, if we want to gather the countries beginning with letter "S" using [regular expressions](https://www.rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf) or [regexs](https://medium.com/factory-mind/regex-tutorial-a-simple-cheatsheet-by-examples-649dc1c3f285). Patterns in stringr are interpreted as regexs.
+
+```{r}
+unlist(str_extract_all(alcohol$country, "^S.+"))
+
+```
+
+
+Or count how many countries begining with "S"
+```{r}
+str_count(alcohol$country, "^S.+")
+
+#Sum up
+sum(str_count(alcohol$country, "^S.+"))
+
+```
+
+<br/>
+
+Another is to convert the names of the columns to a title format instead of doing so individually
+```{r}
+#original 
+names(alcohol)
+kable(head(alcohol)) %>% kable_styling()
+
+#to title
+names(alcohol) <- str_to_title(names(alcohol), locale = "en")
+names(alcohol)
+kable(head(alcohol)) %>% kable_styling()
+```
+
+<br/>
+
+#### There are many other functions within the 'stringr' package that can be checked out [here](https://github.com/rstudio/cheatsheets/blob/master/strings.pdf)
