@@ -22,7 +22,7 @@ library(kableExtra)
 
 # Purrr
 
-Let's say we have a dataset of alcohol consumption among countries and we want to find the mean consumption of beer, spirit, wine and pure alcohol.
+Let's say we have a dataset of alcohol consumption among countries and we want to find the mean consumption of beer, spirit, wine and pure alcohol. Dataset was retrieved from [fivethirtyeight](https://github.com/fivethirtyeight/data/blob/master/alcohol-consumption/README.md).
 
 ```{r}
 alcohol <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/alcohol-consumption/drinks.csv", sep = ",", stringsAsFactors = F)
